@@ -34,8 +34,8 @@ func newUDPServer(host string, port int, dohserver string) error {
 		return err
 	}
 	for {
-		raw := make([]byte, 512)
-		n, addr, err := conn.ReadFromUDP(raw)
+		var raw [512]byte
+		n, addr, err := conn.ReadFromUDP(raw[:512])
 		if err != nil {
 			log.Printf("could not read: %s", err)
 			continue
