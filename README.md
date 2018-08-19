@@ -1,8 +1,6 @@
 # dohproxy
 
-##DNS over HTTPS proxy written in golang
-
-This is a slight modification to satran/dohproxy to run the DNS-over-HTTPS proxy as a docker container/service.
+## Golang DNS-over-HTTPS proxy as a docker container/service.
 
 To build, run the following command:
 ```
