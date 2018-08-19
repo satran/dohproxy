@@ -2,34 +2,48 @@ package main
 
 import (
 	"encoding/base64"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
-func main() {
-	host := flag.String("host", "127.0.0.1", "interface to listen on")
-	port := flag.Int("port", 5353, "dns port to listen on")
-	dohserver := flag.String("dohserver", "https://mozilla.cloudflare-dns.com/dns-query", "DNS Over HTTPS server address")
-	debug := flag.Bool("debug", false, "print debug logs")
-	flag.Parse()
+var defaultEnv = map[string]string{
+	"SERVER_HOSTNAME": "https://mozilla.cloudflare-dns.com/dns-query",
+	"DEBUG":           "FALSE",
+}
 
-	if *debug {
+func getEnv(env string) string {
+	newEnv := os.Getenv(env)
+	if newEnv != "" {
+		return newEnv
+	}
+	if v, ok := defaultEnv[env]; ok {
+		return v
+	}
+	return ""
+}
+
+func main() {
+	debug := getEnv("DEBUG")
+	dohHost := getEnv("SERVER_HOSTNAME")
+
+	if debug == "TRUE" {
 		log.SetFlags(log.Lshortfile)
 	} else {
 		log.SetFlags(0)
 	}
 
-	if err := newUDPServer(*host, *port, *dohserver); err != nil {
-		log.Fatalf("could not listen on %s:%d: %s", *host, *port, err)
+	err := newUDPServer(dohHost)
+	if err != nil {
+		log.Fatalf("could not start server: %v", err)
 	}
 }
 
-func newUDPServer(host string, port int, dohserver string) error {
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(host), Port: port})
+func newUDPServer(dohHost string) error {
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.ParseIP(dohHost), Port: 53})
 	if err != nil {
 		return err
 	}
@@ -41,13 +55,13 @@ func newUDPServer(host string, port int, dohserver string) error {
 			continue
 		}
 		log.Printf("new connection from %s:%d", addr.IP.String(), addr.Port)
-		go proxy(dohserver, conn, addr, raw[:n])
+		go proxy(dohHost, conn, addr, raw[:n])
 	}
 }
 
-func proxy(dohserver string, conn *net.UDPConn, addr *net.UDPAddr, raw []byte) {
+func proxy(dohHost string, conn *net.UDPConn, addr *net.UDPAddr, raw []byte) {
 	enc := base64.RawURLEncoding.EncodeToString(raw)
-	url := fmt.Sprintf("%s?dns=%s", dohserver, enc)
+	url := fmt.Sprintf("%s?dns=%s", dohHost, enc)
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Printf("could not create request: %s", err)
