@@ -22,5 +22,13 @@ You can resolve addresses using:
 dig @127.0.0.1 -p 5353 redhat.com
 ```
 
+### Running it as a docker container
+
+If you would like to run it as a docker container run:
+```
+docker run -it --rm -p 53:53/udp satran/dohproxy
+```
+This will run the proxy on localhost. You can update your `/etc/resolv.conf` file with `nameserver 127.0.0.1` to resolve all dns queries using the dohproxy. 
+
 
 [1] https://tools.ietf.org/html/draft-ietf-doh-dns-over-https-13
