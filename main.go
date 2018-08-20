@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	host := flag.String("host", "127.0.0.1", "interface to listen on")
+	host := flag.String("host", "localhost", "interface to listen on")
 	port := flag.Int("port", 5353, "dns port to listen on")
 	dohserver := flag.String("dohserver", "https://mozilla.cloudflare-dns.com/dns-query", "DNS Over HTTPS server address")
 	debug := flag.Bool("debug", false, "print debug logs")
